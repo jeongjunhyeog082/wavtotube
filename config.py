@@ -6,6 +6,8 @@ from typing import Optional, List
 class AppConfig:
     download_dir: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloads")
     temp_dir: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
+    
+    # 1. 로컬 또는 Render Secret Files 경로(/etc/secrets/cookies.txt 또는 프로젝트 내 cookies.txt) 자동 탐색
     cookie_file: Optional[str] = None
     browser_cookies: Optional[str] = None
     default_format: str = "mp3"
@@ -24,6 +26,17 @@ class AppConfig:
     def __post_init__(self):
         os.makedirs(self.download_dir, exist_ok=True)
         os.makedirs(self.temp_dir, exist_ok=True)
+
+        # 쿠키 파일 자동 탐색 로직 (Render 및 로컬 겸용)
+        possible_paths = [
+            "/etc/secrets/cookies.txt",  # Render.com Secret File 기본 경로
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "cookies.txt"),
+            os.path.join(os.getcwd(), "cookies.txt")
+        ]
+        for p in possible_paths:
+            if os.path.exists(p) and os.path.getsize(p) > 0:
+                self.cookie_file = p
+                break
 
     def validate(self) -> List[str]:
         errors = []
