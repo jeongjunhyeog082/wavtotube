@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wavtotube — 초고속 음원 변환 및 음악 분석</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #121316;
+      --glass-surface: rgba(45, 47, 54, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.12);
+    }
+    body {
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(at 15% 20%, rgba(30, 34, 45, 0.8) 0px, transparent 50%),
+        radial-gradient(at 85% 75%, rgba(20, 24, 33, 0.8) 0px, transparent 50%);
+      color: #F5F5F7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      letter-spacing: -0.02em;
+    }
+    .vision-glass {
+      background: var(--glass-surface);
+      backdrop-filter: blur(50px) saturate(180%);
+      -webkit-backdrop-filter: blur(50px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+    }
+    .vision-control {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.15);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .vision-control:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .apple-spring {
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gradient-hero-text {
+      background: linear-gradient(135deg, #4ade80 0%, #38bdf8 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    @keyframes eq-wave {
+      0%, 100% { height: 4px; }
+      50% { height: 22px; }
+    }
+    .eq-bar { animation: eq-wave 1s ease-in-out infinite; }
+  </style>
+</head>
+<body class="flex flex-col justify-between selection:bg-blue-500/30 selection:text-white">
+
+  <!-- Header -->
+  <header class="w-full pt-6 px-6">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-2xl vision-control flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M12 3v18M7 8v8M17 8v8M2 12v0M22 12v0" />
+          </svg>
+        </div>
+        <span class="text-base font-bold tracking-tight text-white/95">Wavtotube</span>
+      </div>
+      <div>
+        <span class="text-xs font-semibold text-neutral-300 vision-control px-3.5 py-1.5 rounded-full">
+          초고속 10~20초 엔진 적용
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Canvas -->
+  <main class="max-w-3xl mx-auto px-6 py-12 w-full flex-1 flex flex-col justify-center items-center">
+    
+    <div class="text-center mb-10 space-y-3">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
+        모든 음악을<br />
+        <span class="gradient-hero-text">더 빠르고 완벽하게.</span>
+      </h1>
+      <p class="text-sm sm:text-base text-neutral-400 font-medium max-w-md mx-auto pt-2 leading-relaxed">
+        유튜브와 인스타그램 링크를 10~20초 안에 초고속 변환하고,<br />
+        BPM과 키(Key) 정보를 한눈에 분석합니다.
+      </p>
+    </div>
+
+    <!-- Input Glass Card -->
+    <div class="w-full vision-glass rounded-[2rem] p-6 sm:p-8 apple-spring">
+      <form id="convert-form" class="space-y-6">
+        <div class="relative flex items-center">
+          <input
+            type="url"
+            id="url"
+            required
+            placeholder="유튜브 또는 인스타그램 링크를 붙여넣으세요..."
+            class="w-full vision-control rounded-2xl px-5 py-4 text-sm sm:text-base text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 focus:bg-white/[0.09] pr-28 apple-spring"
+          />
+          <button
+            type="button"
+            id="paste-btn"
+            class="absolute right-3 vision-control hover:text-white text-neutral-400 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span>붙여넣기</span>
+          </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+          <div class="vision-control p-1 rounded-2xl inline-flex space-x-1 w-full sm:w-auto justify-center">
+            <label class="cursor-pointer flex-1 sm:flex-none">
+              <input type="radio" name="format" value="mp3" checked class="peer sr-only" />
+              <div class="px-5 py-2 rounded-xl text-xs font-semibold text-neutral-400 peer-checked:text-white peer-checked:bg-white/15 peer-checked:shadow-sm apple-spring text-center">
+                MP3 (320kbps)
+              </div>
+            </label>
+            <label class="cursor-pointer flex-1 sm:flex-none">
+              <input type="radio" name="format" value="wav" class="peer sr-only" />
+              <div class="px-5 py-2 rounded-xl text-xs font-semibold text-neutral-400 peer-checked:text-white peer-checked:bg-white/15 peer-checked:shadow-sm apple-spring text-center">
+                WAV (무손실)
+              </div>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            id="submit-btn"
+            class="w-full sm:w-auto px-7 py-3 rounded-2xl font-semibold text-sm text-white bg-[#0A84FF] hover:bg-[#0071E3] active:scale-[0.98] shadow-lg shadow-blue-500/25 apple-spring flex items-center justify-center space-x-2"
+          >
+            <span id="btn-text">변환 및 분석</span>
+            <svg id="btn-arrow" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+            <svg id="btn-spinner" class="animate-spin h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Playlist Selection Dialog (Apple Glass Modal) -->
+    <div id="playlist-modal" class="hidden mt-6 w-full vision-glass rounded-[2rem] p-6 text-center apple-spring border border-blue-500/30">
+      <div class="w-10 h-10 rounded-2xl bg-blue-500/20 text-[#0A84FF] mx-auto flex items-center justify-center mb-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-white mb-1">플레이리스트가 감지되었습니다</h3>
+      <p id="playlist-msg" class="text-xs text-neutral-400 mb-5">총 여러 개의 영상이 포함되어 있습니다. 어떤 방식으로 다운로드할까요?</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+        <button id="choice-single-btn" class="vision-control hover:bg-white/15 px-4 py-3 rounded-2xl text-xs font-bold text-white border border-white/20 apple-spring">
+          👉 이 곡만 단독 다운로드
+        </button>
+        <button id="choice-playlist-btn" class="bg-[#0A84FF] hover:bg-[#0071E3] px-4 py-3 rounded-2xl text-xs font-bold text-white shadow-lg shadow-blue-500/30 apple-spring">
+          📚 전체 플레이리스트 다운로드 (최대 10곡)
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div id="status-card" class="hidden mt-6 text-center apple-spring opacity-0">
+      <div class="inline-flex items-center space-x-3 vision-glass px-5 py-2.5 rounded-full">
+        <div class="flex items-center space-x-1 h-5">
+          <span class="w-1 bg-[#0A84FF] rounded-full eq-bar" style="animation-delay: 0.1s"></span>
+          <span class="w-1 bg-[#38bdf8] rounded-full eq-bar" style="animation-delay: 0.3s"></span>
+          <span class="w-1 bg-[#4ade80] rounded-full eq-bar" style="animation-delay: 0.2s"></span>
+          <span class="w-1 bg-[#0A84FF] rounded-full eq-bar" style="animation-delay: 0.4s"></span>
+        </div>
+        <span id="status-text" class="text-xs text-neutral-300 font-medium">초고속 오디오 추출 및 BPM / Key 분석 중...</span>
+      </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="error-card" class="hidden mt-6 vision-glass px-5 py-3 rounded-2xl border border-red-500/30 text-xs text-red-300 text-center apple-spring">
+      <span id="error-msg">오류가 발생했습니다. 링크를 확인해주세요.</span>
+    </div>
+
+    <!-- Result Cards List Container -->
+    <div id="results-container" class="w-full space-y-4 mt-8"></div>
+
+  </main>
+
+  <footer class="w-full py-8 text-center text-xs text-neutral-500">
+    Wavtotube &middot; 초고속 음원 변환 및 음악 분석기
+  </footer>
+
+  <script>
+    const form = document.getElementById('convert-form');
+    const urlInput = document.getElementById('url');
+    const pasteBtn = document.getElementById('paste-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnArrow = document.getElementById('btn-arrow');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    const playlistModal = document.getElementById('playlist-modal');
+    const playlistMsg = document.getElementById('playlist-msg');
+    const choiceSingleBtn = document.getElementById('choice-single-btn');
+    const choicePlaylistBtn = document.getElementById('choice-playlist-btn');
+
+    const statusCard = document.getElementById('status-card');
+    const statusText = document.getElementById('status-text');
+    const errorCard = document.getElementById('error-card');
+    const errorMsg = document.getElementById('error-msg');
+    const resultsContainer = document.getElementById('results-container');
+
+    function translateKeyToKorean(keyStr) {
+      if (!keyStr) return '--';
+      return keyStr.replace('Major', '장조 (Major)').replace('Minor', '단조 (Minor)');
+    }
+
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          urlInput.value = text;
+          urlInput.focus();
+        }
+      } catch (err) {
+        urlInput.focus();
+      }
+    });
+
+    // 폼 제출 시 플레이리스트 여부 먼저 검사
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = urlInput.value.trim();
+
+      errorCard.classList.add('hidden');
+      playlistModal.classList.add('hidden');
+      resultsContainer.innerHTML = '';
+
+      submitBtn.disabled = true;
+      btnText.textContent = "링크 확인 중...";
+      btnArrow.classList.add('hidden');
+      btnSpinner.classList.remove('hidden');
+
+      try {
+        const checkRes = await fetch('/api/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const checkData = await checkRes.json();
+
+        if (checkData.success && checkData.data.is_playlist) {
+          // 플레이리스트인 경우 선택 모달 노출
+          playlistMsg.textContent = `이 링크는 '${checkData.data.title}' 플레이리스트(총 ${checkData.data.count}곡)입니다. 어떻게 다운로드할까요?`;
+          playlistModal.classList.remove('hidden');
+          submitBtn.disabled = false;
+          btnText.textContent = "변환 및 분석";
+          btnArrow.classList.remove('hidden');
+          btnSpinner.classList.add('hidden');
+        } else {
+          // 단일 곡인 경우 즉시 단일 다운로드 시작
+          startConversion(url, "single");
+        }
+      } catch (err) {
+        // 체크 실패 시 기본 단일 모드로 진행
+        startConversion(url, "single");
+      }
+    });
+
+    choiceSingleBtn.addEventListener('click', () => {
+      playlistModal.classList.add('hidden');
+      startConversion(urlInput.value.trim(), "single");
+    });
+
+    choicePlaylistBtn.addEventListener('click', () => {
+      playlistModal.classList.add('hidden');
+      startConversion(urlInput.value.trim(), "playlist");
+    });
+
+    async function startConversion(url, mode) {
+      const format = document.querySelector('input[name="format"]:checked').value;
+
+      errorCard.classList.add('hidden');
+      statusCard.classList.remove('hidden');
+      statusText.textContent = mode === "playlist" ? "플레이리스트 오디오 일괄 추출 중..." : "오디오 추출 및 초고속 BPM/Key 분석 중...";
+      setTimeout(() => statusCard.classList.remove('opacity-0'), 20);
+
+      submitBtn.disabled = true;
+      btnText.textContent = "처리 중...";
+      btnArrow.classList.add('hidden');
+      btnSpinner.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, format, mode })
+        });
+
+        const resText = await res.text();
+        let resData;
+        try {
+          resData = JSON.parse(resText);
+        } catch (jsonErr) {
+          throw new Error('서버 응답 오류 (로그 확인 필요): ' + resText.slice(0, 100));
+        }
+
+        if (!res.ok || !resData.success) {
+          throw new Error(resData.detail || '변환 처리 중 오류가 발생했습니다.');
+        }
+
+        const tracks = resData.data;
+
+        // 결과 카드 렌더링
+        resultsContainer.innerHTML = '';
+        tracks.forEach(t => {
+          const min = Math.floor(t.duration / 60);
+          const sec = Math.floor(t.duration % 60).toString().padStart(2, '0');
+          const thumbHtml = t.thumbnail ? `<img src="${t.thumbnail}" class="w-full h-full object-cover">` : `<div class="text-neutral-500 text-xs">오디오</div>`;
+
+          const card = document.createElement('div');
+          card.className = "vision-glass rounded-[2rem] p-6 sm:p-7 shadow-2xl apple-spring";
+          card.innerHTML = `
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-black/40 border border-white/10 flex-shrink-0 flex items-center justify-center shadow-md">
+                ${thumbHtml}
+              </div>
+              <div class="flex-1 w-full space-y-3.5 text-center sm:text-left">
+                <div>
+                  <div class="flex items-center justify-center sm:justify-start space-x-2 mb-1.5">
+                    <span class="text-[11px] font-bold text-white px-2 py-0.5 rounded-md bg-white/10 uppercase tracking-wider">${t.format.toUpperCase()}</span>
+                    <span class="text-xs text-neutral-400 font-medium">${min}:${sec}</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white tracking-tight line-clamp-1">${t.title}</h3>
+                  <p class="text-xs text-neutral-400 pt-0.5">${t.artist || '알 수 없음'}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                  <div class="vision-control rounded-2xl p-3 flex flex-col items-center justify-center">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400">템포</span>
+                    <span class="text-2xl font-extrabold text-white tracking-tight mt-0.5">${t.bpm}</span>
+                    <span class="text-[10px] text-neutral-500 font-medium">BPM</span>
+                  </div>
+                  <div class="vision-control rounded-2xl p-3 flex flex-col items-center justify-center">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400">조성 (키)</span>
+                    <span class="text-xl font-extrabold text-white tracking-tight mt-0.5">${translateKeyToKorean(t.key)}</span>
+                    <span class="text-[10px] text-neutral-500 font-medium">음악 Key</span>
+                  </div>
+                </div>
+                <div class="pt-2">
+                  <a href="${t.download_url}" class="w-full py-3.5 px-5 rounded-2xl text-xs font-bold text-white bg-white/10 hover:bg-white/15 active:scale-[0.985] apple-spring flex items-center justify-center space-x-2 border border-white/15">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span>오디오 파일 다운로드</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+          resultsContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        errorMsg.textContent = err.message || '요청 처리 실패';
+        errorCard.classList.remove('hidden');
+      } finally {
+        statusCard.classList.add('hidden');
+        submitBtn.disabled = false;
+        btnText.textContent = "변환 및 분석";
+        btnArrow.classList.remove('hidden');
+        btnSpinner.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
