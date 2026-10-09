@@ -66,11 +66,15 @@ def download_audio_core(url: str, output_format: str = "mp3", is_playlist: bool 
         'outtmpl': os.path.join(DOWNLOAD_DIR, '%(id)s.%(ext)s'),
         'noplaylist': not is_playlist,
         'playlistend': 5 if is_playlist else 1,
-        # max_downloads 옵션 제거 (예외 충돌 방지)
+        # [핵심] 유튜브 봇 검사 우회 설정: iOS 및 Android 모바일 클라이언트 요청
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'web']
+                'player_client': ['ios', 'android', 'mweb']
             }
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
         },
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
